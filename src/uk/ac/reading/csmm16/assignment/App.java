@@ -1,67 +1,37 @@
 package uk.ac.reading.csmm16.assignment;
 
 
-import java.io.*;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class App { /** 0- git and github submition*/
 
-    public static void main(String[] args) {
+// Map <key, value> for each to count the number flights
+public static Map<String, Integer> mapperOutput = new ConcurrentHashMap<>();
+    // Maximum number of threads in thread pool
+    static final int MAX_T = 3;
 
-        /** 1- read csv file in buffer*/
+    public static void main(String[] args) { // Main program
+
+        /** Output commandLine selection
+         *  1 --> Get flights number by airport Code
+         *  2 --> Get a list of flights based on the Flight id
+         *  3 --> Get the number of passengers on each flight
+         *  4 --> the line-of-sight (nautical) miles for each flight, the total travelled by each passenger
+         *        and the passenger having earned the highest air miles.
+         * */
+        int outPutMode = 2;
+
         String userDir = System.getProperty("user.dir");
-        userDir =  userDir.replace("\\", "/");
-        String csvFile = userDir+"/AComp_Passenger_data_no_error.csv";
-        String line = "";
-        //String cvsSplitBy = ",";
-        List blocksList = new LinkedList<LinkedList>(); // a list of LinkedLists to store each created block of the csv file
-        int blockSize = 10;
-        List block = new LinkedList<String>(); // a list of stings to store the segment of the csv file
-        int blockCount=0; // to count each line appended to a block by adding 1 i.e blockCount++
+        userDir =userDir.replace("\\","/");
+        String ACompPassengerDataFile = userDir + "/AComp_Passenger_data_no_error.csv"; // testing
 
-        // step 1-2: split csv file into blocks
-        // split the file to multiple buffers where each buffer has n-size (10 or more) lines the last buffer can have n<= n lines
+        ReadAndStore readAndStore = new ReadAndStore(ACompPassengerDataFile);
 
-        LinkedList<String> _unit = null; // testing
-        String [] splitedLine = null;
-
-        // here I used "try resources" from JDK 7 to handle the file resources automatically
-        try (BufferedReader br = new BufferedReader(new FileReader(csvFile))) {
-            while ((line = br.readLine()) != null) {
-
-                if (blockCount<blockSize){
-                    block.add(line);
-                    blockCount++;
-                    // create blocks with size e.g 10 lines and put the remaining records in the last block
-                    if (blockCount == blockSize){
-                        // linked list for all records
-                        blocksList.add(block);
-                        block = new LinkedList<String>();
-                        blockCount = 0;
-                    }
-                }
-            }
-            if (block.size()>0){
-                // this is to add the remaining block in the case when the size of the data set is not divisible by the blockSize
-                blocksList.add(block);
-            }
-
-            //******************  Testing start 1 ********************
-
-            System.out.println("Number of blocks = " + blocksList.size());
-            _unit = (LinkedList<String>)blocksList.get(38);
-            System.out.println(_unit.get(0));
-            System.out.println(_unit.get(1));
-            System.out.println(_unit.get(4));
-            System.out.println(_unit.get(6));
-            System.out.println(_unit.get(8));
-            System.out.println("Number of blocks = " + _unit.size());
-
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        List blocksList = readAndStore.splitIntoBlocks();
 
         //******************  Testing ends 1 ********************
 
@@ -70,6 +40,7 @@ public class App { /** 0- git and github submition*/
         /** 2- Map phase(each line): filter each buffer and store the results in map(key, value) object*/
         // 1st implement for one buffer (can be the whole file for the testing phase) with RegExp
         // Use threadpools to allocate each buffer(each block) to a thread.
+
 
         //*************** Testing start 2 ***************
 //        if (_unit.size()>0){
@@ -84,44 +55,165 @@ public class App { /** 0- git and github submition*/
 //            }
 //        }
 
-        // Map key value for to count the number flights
-        Map<String, Integer> numFlights = new HashMap<>();
-        int totalFlightNumber = 0; // Counter + numFlights
-
+        // creates a thread pool with MAX_T no. of
+        // threads as the fixed pool size
+        ExecutorService pool = Executors.newFixedThreadPool(MAX_T);
         if(!blocksList.isEmpty()) {
-            for (Iterator it = blocksList.iterator(); it.hasNext(); ) { // using for loop with iterator
-                _unit = (LinkedList<String>)it.next();
-                //_unit = (LinkedList<String>) blocksList.get(j);
-                if (!_unit.isEmpty()) {
-                    //System.out.println("_unit is not empty | size =" + _unit.size());
-                    for (int i = 0; i < _unit.size(); i++) {
-                        splitedLine = _unit.get(i).split(",");
+            switch (outPutMode){
+                case 1:
+                    /** 2-1- Get the number of flights for each airport in a block using its Code {include a list of any airports not used} */
 
-                        if (splitedLine[2].matches("\\w*")) {
-                            if (!numFlights.containsKey(splitedLine[2])) {
-                                numFlights.put(splitedLine[2], 1);
-                            } else {
-                                numFlights.put(splitedLine[2], numFlights.get(splitedLine[2]).intValue() + 1);
-                            }
-                            System.out.println("---> Match: " + i + " " + splitedLine[2]);
-                        }else {
-                            System.out.println("!--- Not matched: " + splitedLine[2]);
-                        }
-                    }
-                }
+                    for (Iterator it = blocksList.iterator(); it.hasNext(); ) { // using for loop with iterator
+                        LinkedList<String> _unit1 = (LinkedList<String>)it.next();
+                        Mapper mapper = new MapFlightsNumberByAirportCode(_unit1, mapperOutput);
+                        pool.execute(mapper);
+                    };
+                    break;
+                case 2:
+                    /** 2-2- Create a list of flights based on the Flight id, this output should include the
+                     * passenger Id,
+                     * relevant IATA/FAA codes,
+                     * the departure time,
+                     * the arrival time (times to be converted to HH:MM:SS format), and
+                     * the flight times.
+                     * */
+
+                    for (Iterator it = blocksList.iterator(); it.hasNext(); ) { // using for loop with iterator
+                        LinkedList<String> _unit1 = (LinkedList<String>)it.next();
+                        Mapper mapper = new MapFlightsListByID(_unit1, mapperOutput);
+                        pool.execute(mapper);
+                    };
+                    break;
+                case 3:
+                    /** 2-3- Calculate the number of passengers on each flight. */
+
+
+                    break;
+                default:
+                    System.out.println("Please select a number from the list: "); // print the list again and wait for input
+
             }
+
+            pool.shutdown();
         }
+
         //*************** Testing ends 2 ***************
+
+
+
+        // Map <key, value> for each to count the number flights
+//        Map<String, Integer> numFlights = Collections.synchronizedMap(new HashMap<>());
+//        int totalFlightNumber = 0; // Counter + numFlights
+//
+//        // creates a thread pool with MAX_T no. of
+//        // threads as the fixed pool size
+//        ExecutorService pool = Executors.newFixedThreadPool(MAX_T);
+//
+//        if(!blocksList.isEmpty()) {
+//
+//            for (Iterator it = blocksList.iterator(); it.hasNext(); ) { // using for loop with iterator
+//                LinkedList<String> _unit1 = (LinkedList<String>)it.next();
+//                Runnable runnable = () -> {
+//                    //System.out.println("****************** this is the entry *** " + Thread.currentThread().getName()); // testing
+//                    String [] splitedLine1 = null;
+//                    //_unit = (LinkedList<String>) blocksList.get(j); // testing
+//                    if (!_unit1.isEmpty()) {
+//                        //System.out.println("_unit is not empty | size =" + _unit.size()); // testing
+//                        int unitSize = _unit1.size();
+//                        for (int i = 0; i < unitSize; i++) {
+//                            splitedLine1 = _unit1.get(i).split(",");
+//
+//                            if (splitedLine1[2].matches("\\w*")) {
+//                                if (!numFlights.containsKey(splitedLine1[2])) {
+//                                    numFlights.put(splitedLine1[2], 1);
+//                                } else {
+//                                    // The get function doesn't not support locking-- ConcurrentHashMap
+//                                    numFlights.put(splitedLine1[2], (numFlights.get(splitedLine1[2]).intValue() + 1));
+//                                }
+//                                System.out.println("---> Match: " + i + " " + splitedLine1[2]);
+//                            }else {
+//                                System.out.println("!--- Not matched: " + splitedLine1[2]);
+//                            }
+//                        }
+//                    }
+//                };
+//
+//                // passes the Task objects to the pool to execute
+//                pool.execute(runnable);
+//            }
+//            // pool shutdown
+//            pool.shutdown();
+//        }
+
+        /** 2-3- Calculate the number of passengers on each flight. */
+
+        /** 2-4- Calculate
+         * the line-of-sight (nautical) miles for each flight and
+         * the total travelled by each passenger
+         * and thus output the passenger having earned the highest air miles.
+         * */
 
 
         // ... add more features later... (Shuffler, Combiner,...)
 
         /** 3- Reduce phase: combine(merge) the results of the map phase to one array where each element has one result unit as map object*/
 
+        /** 3-1- Get the number of flights for each airport from ALL the blocks using the its Code
+         * {include a list of any airports not used}
+         * Map(<String> airportCode, <LinkedList> numFlightsList) ---> Reduce(<String> airportCode, <Integer> numFlights)
+         * */
+        //..
 
+        /** 3-2- */
+
+        /** 3-3- */
+
+        /** 3-2- */
+
+
+        /** 3-[Testing] --> 2-2- Create a list of flights based on the Flight id, this output should include the */
         //*************** Testing Start 3 ***************
+
+
+        try { // testing
+            pool.awaitTermination(1, TimeUnit.DAYS);
+        } catch (InterruptedException e) {
+        }
+
+
+        switch (outPutMode){
+            case 1: flightNumberByAirportCodeOutput();
+                break;
+            case 2: flightListByIDOutput();
+                break;
+            default:
+                // log the error
+        }
+
+        //*************** Testing ends 3 ***************
+
+        /** 3-[Testing] --> 2-1- get the total number of flights for all airport by adding all the value from the map phase
+         * passenger Id,
+         * relevant IATA/FAA codes,
+         * the departure time,
+         * the arrival time (times to be converted to HH:MM:SS format), and
+         * the flight times.
+         * */
+        //*************** Testing Start 4 ***************
+
+        //*************** Testing Ends 4 ***************
+
+        /** 4- Missing value correction (Error Handling)*/
+
+
+
+    }
+
+
+    public static void flightNumberByAirportCodeOutput (){
+        int totalFlightNumber = 0; // Counter + numFlights
         // displaying the final results
-        Set set = numFlights.entrySet(); //Converting the Map object to a Set object so that we can traverse it
+        Set set = mapperOutput.entrySet(); //Converting the Map object to a Set object so that we can traverse it
         Iterator itr = set.iterator();
 
         while(itr.hasNext()) {
@@ -135,18 +227,25 @@ public class App { /** 0- git and github submition*/
 
         // Printing the total number of flights
         System.out.println("**********The total number of flights is " + totalFlightNumber);
-
-        //*************** Testing ends 3 ***************
-
-        /** 4- Missing value correction (Error Handling)*/
-
-
-
     }
 
-//    public static LinkedList map(Integer integer, String s){
-//
-//        //return list;
-//    }
+    public static void flightListByIDOutput (){
+        int totalFlightNumber = 0; // Counter + numFlights
+        // displaying the final results
+        Set set = mapperOutput.entrySet(); //Converting the Map object to a Set object so that we can traverse it
+        Iterator itr = set.iterator();
+
+        while(itr.hasNext()) {
+            //Converting to Map.Entry so that we can get key and value separately
+            Map.Entry entry=(Map.Entry)itr.next();
+            System.out.println("Number of flights with id = " + entry.getKey()+ " is = " + entry.getValue());
+
+            // Counting the total number of flights
+            totalFlightNumber += (int)entry.getValue();
+        }
+
+        // Printing the total number of flights
+        System.out.println("@@@@@@@ The total number of flights 'ID' is " + totalFlightNumber);
+    }
 
 }

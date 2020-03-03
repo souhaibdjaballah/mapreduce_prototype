@@ -1,0 +1,8 @@
+.idea/
+out/
+testing/
+other_testing/
+mapreduce_prototype.iml
+*.zip
+*.7z
+*.rar
