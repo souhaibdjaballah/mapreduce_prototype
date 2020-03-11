@@ -3,6 +3,7 @@ package uk.ac.reading.csmm16.assignment;
 import java.util.LinkedList;
 import java.util.Map;
 
+
 public class MapFlightsListByID extends Mapper<String, Integer> implements Runnable {
 
 

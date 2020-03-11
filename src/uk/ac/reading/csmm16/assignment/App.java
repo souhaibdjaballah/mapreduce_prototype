@@ -9,8 +9,8 @@ import java.util.concurrent.TimeUnit;
 
 public class App { /** 0- git and github submition*/
 
-// Map <key, value> for each to count the number flights
-public static Map<String, Integer> mapperOutput = new ConcurrentHashMap<>();
+    // Map <key, value> for each to count the number flights
+    public static Map<String, Integer> mapperOutput = new ConcurrentHashMap<>();
     // Maximum number of threads in thread pool
     static final int MAX_T = 3;
 

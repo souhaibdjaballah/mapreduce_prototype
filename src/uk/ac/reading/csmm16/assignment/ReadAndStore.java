@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
-public class ReadAndStore {
+public class ReadAndStore implements Runnable {
 
     /**
      * 1- read csv file in buffer
@@ -20,17 +20,20 @@ public class ReadAndStore {
     }
 
     //String cvsSplitBy = ",";
-    List blocksList = new LinkedList<LinkedList>(); // a list of LinkedLists to store each created block of the csv file
-    int blockSize = 10;
-    List block = new LinkedList<String>(); // a list of stings to store the segment of the csv file
-    int blockCount = 0; // to count each line appended to a block by adding 1 i.e blockCount++
+    private LinkedList blocksList = new LinkedList<LinkedList>(); // a list of LinkedLists to store each created block of the csv file
+    private int blockSize = 10;
+    private List block = new LinkedList<String>(); // a list of stings to store the segment of the csv file
+    private int blockCount = 0; // to count each line appended to a block by adding 1 i.e blockCount++
 
     // step 1-2: split csv file into blocks
     // split the file to multiple buffers where each buffer has n-size (e.g. 10) lines the last buffer can have n<= n lines
 
-    LinkedList<String> _unit = null; // testing
 
-    public List splitIntoBlocks(){
+    public LinkedList getBlocksList() {
+        return blocksList;
+    }
+
+    public void splitIntoBlocks(){
         // here I used "try resources" from JDK 7 to handle the file resources automatically
         try(BufferedReader br = new BufferedReader(new FileReader(csvFile)))
         {
@@ -58,7 +61,10 @@ public class ReadAndStore {
         } catch(IOException e){
             e.printStackTrace();
         }
+    }
 
-        return blocksList;
+    @Override
+    public void run() {
+        splitIntoBlocks();
     }
 }
