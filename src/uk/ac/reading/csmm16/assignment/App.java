@@ -10,14 +10,13 @@ public class App {
 
     public static void main(String[] args) { // Main program
 
-        /** Output commandLine selection
+        /** Output
          *  1 --> Get flights number by airport Code
          *  2 --> Get a list of flights based on the Flight id
          *  3 --> Get the number of passengers on each flight
          *  4 --> the line-of-sight (nautical) miles for each flight, the total travelled by each passenger
          *        and the passenger having earned the highest air miles.
          * */
-        int outPutMode = 2;
 
         String userDir = System.getProperty("user.dir");
         userDir =userDir.replace("\\","/");
@@ -28,16 +27,7 @@ public class App {
 
         List blocksList = readAndStore.getBlocksList();
 
-        //******************  Testing ends 1 ********************
 
-
-
-        /** 2- Map phase(each line): filter each buffer and store the results in map(key, value) object*/
-        // 1st implement for one buffer (can be the whole file for the testing phase) with RegExp
-        // Use threadpools to allocate each buffer(each block) to a thread.
-
-
-        //*************** Testing start  ***************
         Configuration configuration = new Configuration();
         Job job = Job.getInstance(configuration);
         job.setJobName("non-MapReduce executable prototype");
