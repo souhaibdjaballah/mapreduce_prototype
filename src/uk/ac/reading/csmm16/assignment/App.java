@@ -1,50 +1,97 @@
 package uk.ac.reading.csmm16.assignment;
 
 
-import uk.ac.reading.csmm16.assignment.Configuration;
-import uk.ac.reading.csmm16.assignment.Job;
-
-import java.util.*;
+import uk.ac.reading.csmm16.assignment.core.Configuration;
+import uk.ac.reading.csmm16.assignment.core.ErrorHandler;
+import uk.ac.reading.csmm16.assignment.core.Job;
 
 public class App {
 
-    public static void main(String[] args) { // Main program
+    public static void main(String[] args) throws ErrorHandler {
 
-        /** Output
-         *  1 --> Get flights number by airport Code
-         *  2 --> Get a list of flights based on the Flight id
-         *  3 --> Get the number of passengers on each flight
-         *  4 --> the line-of-sight (nautical) miles for each flight, the total travelled by each passenger
-         *        and the passenger having earned the highest air miles.
-         * */
+        Configuration conf = new Configuration();
+        Job job1 = new Job(conf, "Job-1 for Objective1");
 
-        String userDir = System.getProperty("user.dir");
-        userDir =userDir.replace("\\","/");
-        String passengerDataFile = userDir + "/AComp_Passenger_data_no_error.csv"; // testing
-        String topAirportsFile = userDir + "/Top30_airports_LatLong.csv"; // testing
+        // Job 1 for Objective1 ----------------------------------------
+        try {
+            job1.setMapperClass(MapPassengersAndAirports.class);
+//        job.setReducerClass(ReducePassengersAndAirports.class);
+//        job.setMapperClass(MapObjective1.class);
+            job1.setReducerClass(ReduceObjective1.class);
+//        job.addInputPath(args[1]);
+//        job.addInputPath(args[2]);
+            job1.addInputPath("Top30_airports_LatLong.csv");
+            job1.addInputPath("AComp_Passenger_data.csv");
+//            job1.setOutputDirPath("job1");
+            job1.submit();
+        } catch (ErrorHandler errorHandler) {
+            new ErrorHandler(job1.getJobName()).errorLogWriter(errorHandler);
+        }
 
-        ReadAndStore readAndStore = new ReadAndStore(passengerDataFile);
+        // Job 2 for Objective2 ----------------------------------------
+        Job job2 = new Job(conf, "Job-2 for Objective2");
+        try {
+            job2.setMapperClass(MapPassengersAndAirports.class);
+//        job.setReducerClass(ReducePassengersAndAirports.class);
+//        job.setMapperClass(MapObjective1.class);
+            job2.setReducerClass(ReduceObjective2.class);
+//        job.addInputPath(args[1]);
+//        job.addInputPath(args[2]);
+            job2.addInputPath("Top30_airports_LatLong.csv");
+            job2.addInputPath("AComp_Passenger_data.csv");
+            job2.setOutputDirPath("job2");
+            job2.submit();
+        } catch (ErrorHandler errorHandler) {
+            new ErrorHandler(job2.getJobName()).errorLogWriter(errorHandler);
+        }
 
-        List blocksList = readAndStore.getBlocksList();
+        // Job 3 for Objective3 ----------------------------------------
+        Job job3 = new Job(conf, "Job-3 for Objective3");
+        job3.setMapperClass(MapPassengersAndAirports.class);
+//        job.setReducerClass(ReducePassengersAndAirports.class);
+//        job.setMapperClass(MapObjective1.class);
+        job3.setReducerClass(ReduceObjective3.class);
+//        job.addInputPath(args[1]);
+//        job.addInputPath(args[2]);
+        job3.addInputPath("Top30_airports_LatLong.csv");
+        job3.addInputPath("AComp_Passenger_data.csv");
+        job3.setOutputDirPath("job3");
+        job3.submit();
+
+        // Job 4 for Objective4 ----------------------------------------
+        Job job4 = new Job(conf, "Job-4 for Objective4");
+        job4.setMapperClass(MapPassengersAndAirports.class);
+//        job.setReducerClass(ReducePassengersAndAirports.class);
+//        job.setMapperClass(MapObjective1.class);
+        job4.setReducerClass(ReduceObjective4.class);
+//        job.addInputPath(args[1]);
+//        job.addInputPath(args[2]);
+        job4.addInputPath("Top30_airports_LatLong.csv");
+        job4.addInputPath("AComp_Passenger_data.csv");
+        job4.setOutputDirPath("job4");
+        job4.submit();
 
 
-        Configuration configuration = new Configuration();
-        Job job = Job.getInstance(configuration);
-        job.setJobName("non-MapReduce executable prototype");
+        //--------------------------------------------------------------
+
+
+        /**
+         * Global job for for printing all the objectives in one or multiple output files(by setting conf.setMultiOuputFiles(true);)
+         * This is meant for proof of concept, illustrating how this prototype implemented the multiple output files from one job
+         * just by adding a 'Map' list with key value or a single 'KeyValueObject' for each objective to the reducer output (context) list
+         * The output files number is the number of Map lists and/or KeyValueObjects
+         */
+//        Configuration multiOuputConf = new Configuration();
+//        conf.setMultiOuputFiles(true);
+//        Job job = new Job(multiOuputConf, "Job-1 for Objective1");
 
 //        job.setMapperClass(MapPassengersAndAirports.class);
-//        job.setReducerClass(ReducerPassangersAndAirports.class);
-        configuration.setReducersNumber(3);
-
-        // Set the locations for the input and output files
-        job.addInputPath(passengerDataFile);    //args[0] testing
-        job.addInputPath(topAirportsFile);       //args[1] testing
-        //set output path
-        job.addOutputPath("./outputMppRdcr.txt");       //args[2] testing
-
-//        job.waitForCompletion(true);//pass config to job and run job
-        // Run the job
-        job.submit();
-
+//        job.setReducerClass(ReducePassengersAndAirports.class);
+////        job.addInputPath(args[1]);
+////        job.addInputPath(args[2]);
+//        job.addInputPath("Top30_airports_LatLong.csv");
+//        job.addInputPath("AComp_Passenger_data.csv");
+////        job.addOutputPath(args[3]); // Optional
+//        job.submit();
     }
 }
