@@ -101,8 +101,6 @@ public class Job {
         WriteToFile writeToFile = new WriteToFile(reducersList);
         writeToFile.setOutputDirPath(outputDirPath);
         writeToFile.setFileExtention(configuration.getOutputFileExtension());
-        if(configuration.isMultiOuputFiles())
-            writeToFile.setMultiOutputFiles(configuration.isMultiOuputFiles());
         writeToFile.write();
     }
 

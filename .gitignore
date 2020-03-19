@@ -1,5 +1,6 @@
 .idea/
 out/
+outputFiles/
 testing/
 other_testing/
 mapreduce_prototype.iml

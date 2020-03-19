@@ -28,12 +28,16 @@ public class ReduceObjective1 extends Reducer {
     }
 
     void reduce(){
+        Airport airport;
         Passenger passenger;
 
+
+        // a list of passengers with flight id as its key
+        Map<String,Passenger> flightsList = new HashMap<>();
+        // List of airports code
+        List<String> airportCodeList =  new LinkedList();
         // Map lists for storing objectives key value pairs
         Map<String, Integer> flightsNumByAirportCode = new HashMap();
-        // Passenger list to facilitate the look-up between it the airport list to achieve the 4th objective
-        List<Passenger> passengerList = new LinkedList();
 
         //Converting the Map object to a Set object so that we can traverse it
         Set set = inputList.entrySet();
@@ -42,16 +46,41 @@ public class ReduceObjective1 extends Reducer {
         while(keyValue.hasNext()) {
             //Converting to Map.Entry so that we can get key and value separately
             Map.Entry entry = (Map.Entry) keyValue.next();
+            if(entry.getValue() instanceof Airport) {
+                airport = (Airport) entry.getValue();
+                airportCodeList.add(airport.getCode());
+            }
             if(entry.getValue() instanceof Passenger){
                 passenger = (Passenger) entry.getValue();
-                passengerList.add(passenger);
+                flightsList.put(passenger.getFlightID(),passenger);
+            }
+        }
+
+        for(String airportCode : airportCodeList){
+            int flightsCounter = 0;
+            set = flightsList.entrySet();
+            keyValue = set.iterator();
+
+            while(keyValue.hasNext()) {
+                //Converting to Map.Entry so that we can get key and value separately
+                Map.Entry entry = (Map.Entry) keyValue.next();
+                passenger = (Passenger) entry.getValue();
 
                 // 1 --> Get flights number by airport Code
-                if (!flightsNumByAirportCode.containsKey(passenger.getFromAirportCode())) {
-                    flightsNumByAirportCode.put(passenger.getFromAirportCode(), 1);
+                if (airportCode.equals(passenger.getFromAirportCode())) {
+                    if (!flightsNumByAirportCode.containsKey(airportCode)){
+                        flightsNumByAirportCode.put(airportCode, 1);
+                    }else {
+                        flightsNumByAirportCode.put(airportCode,
+                                flightsNumByAirportCode.get(airportCode) + 1);
+                    }
                 } else {
-                    flightsNumByAirportCode.put(passenger.getFromAirportCode(),
-                            flightsNumByAirportCode.get(passenger.getFromAirportCode()).intValue() + 1);
+                    if (!flightsNumByAirportCode.containsKey(airportCode)){
+                        flightsNumByAirportCode.put(airportCode, 0);
+                    }else {
+                        flightsNumByAirportCode.put(airportCode,
+                                flightsNumByAirportCode.get(airportCode) + 0);
+                    }
                 }
             }
         }

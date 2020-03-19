@@ -8,7 +8,6 @@ public class Configuration {
     public static int NUMBER_OF_THREADS = 3;
     public static int BLOCK_SIZE = 10;
     private String outputFileExtension = ".csv";
-    private boolean multiOuputFiles = false;
 
 
     public void setOutputFileExtension(String outputFileExtension) {
@@ -18,14 +17,5 @@ public class Configuration {
     public String getOutputFileExtension() {
         return outputFileExtension;
     }
-
-    public void setMultiOuputFiles(boolean multiOuputFiles) {
-        this.multiOuputFiles = multiOuputFiles;
-    }
-
-    public boolean isMultiOuputFiles() {
-        return multiOuputFiles;
-    }
-
 
 }

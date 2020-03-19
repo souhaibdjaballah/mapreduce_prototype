@@ -13,37 +13,33 @@ public class App {
         Job job1 = new Job(conf, "Job-1 for Objective1");
 
         // Job 1 for Objective1 ----------------------------------------
-        try {
-            job1.setMapperClass(MapPassengersAndAirports.class);
+
+        job1.setMapperClass(MapPassengersAndAirports.class);
 //        job.setReducerClass(ReducePassengersAndAirports.class);
 //        job.setMapperClass(MapObjective1.class);
-            job1.setReducerClass(ReduceObjective1.class);
+        job1.setReducerClass(ReduceObjective1.class);
+        job1.setCombinerClass(CombineObjective1.class);
 //        job.addInputPath(args[1]);
 //        job.addInputPath(args[2]);
-            job1.addInputPath("Top30_airports_LatLong.csv");
-            job1.addInputPath("AComp_Passenger_data.csv");
-//            job1.setOutputDirPath("job1");
-            job1.submit();
-        } catch (ErrorHandler errorHandler) {
-            new ErrorHandler(job1.getJobName()).errorLogWriter(errorHandler);
-        }
+        job1.addInputPath("Top30_airports_LatLong.csv");
+        job1.addInputPath("AComp_Passenger_data.csv");
+        job1.setOutputDirPath("job1");
+        job1.submit();
 
         // Job 2 for Objective2 ----------------------------------------
         Job job2 = new Job(conf, "Job-2 for Objective2");
-        try {
-            job2.setMapperClass(MapPassengersAndAirports.class);
+
+        job2.setMapperClass(MapPassengersAndAirports.class);
 //        job.setReducerClass(ReducePassengersAndAirports.class);
 //        job.setMapperClass(MapObjective1.class);
-            job2.setReducerClass(ReduceObjective2.class);
+        job2.setReducerClass(ReduceObjective2.class);
 //        job.addInputPath(args[1]);
 //        job.addInputPath(args[2]);
-            job2.addInputPath("Top30_airports_LatLong.csv");
-            job2.addInputPath("AComp_Passenger_data.csv");
-            job2.setOutputDirPath("job2");
-            job2.submit();
-        } catch (ErrorHandler errorHandler) {
-            new ErrorHandler(job2.getJobName()).errorLogWriter(errorHandler);
-        }
+        job2.addInputPath("Top30_airports_LatLong.csv");
+        job2.addInputPath("AComp_Passenger_data.csv");
+        job2.setOutputDirPath("job2");
+        job2.submit();
+
 
         // Job 3 for Objective3 ----------------------------------------
         Job job3 = new Job(conf, "Job-3 for Objective3");
@@ -71,27 +67,5 @@ public class App {
         job4.setOutputDirPath("job4");
         job4.submit();
 
-
-        //--------------------------------------------------------------
-
-
-        /**
-         * Global job for for printing all the objectives in one or multiple output files(by setting conf.setMultiOuputFiles(true);)
-         * This is meant for proof of concept, illustrating how this prototype implemented the multiple output files from one job
-         * just by adding a 'Map' list with key value or a single 'KeyValueObject' for each objective to the reducer output (context) list
-         * The output files number is the number of Map lists and/or KeyValueObjects
-         */
-//        Configuration multiOuputConf = new Configuration();
-//        conf.setMultiOuputFiles(true);
-//        Job job = new Job(multiOuputConf, "Job-1 for Objective1");
-
-//        job.setMapperClass(MapPassengersAndAirports.class);
-//        job.setReducerClass(ReducePassengersAndAirports.class);
-////        job.addInputPath(args[1]);
-////        job.addInputPath(args[2]);
-//        job.addInputPath("Top30_airports_LatLong.csv");
-//        job.addInputPath("AComp_Passenger_data.csv");
-////        job.addOutputPath(args[3]); // Optional
-//        job.submit();
     }
 }

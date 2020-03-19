@@ -11,7 +11,6 @@ class WriteToFile {
     private String outputPath;
     private String outputDirPath;
     private String fileExtention;
-    private boolean multiOutputFiles;
 
     /**
      * @param recuderOutputList
@@ -28,9 +27,6 @@ class WriteToFile {
         this.fileExtention = fileExtention;
     }
 
-    public void setMultiOutputFiles(boolean multiOutputFiles) {
-        this.multiOutputFiles = multiOutputFiles;
-    }
 
     void fileCheck(File file) throws ErrorHandler {
         if (file.exists()) {
@@ -75,13 +71,7 @@ class WriteToFile {
 
             for (Reducer reducer : recudersList) {
                 for (Object reducerOutput : reducer.getReducerOutput()){
-                    if(multiOutputFiles){
-                        fileWriter.close();
-                        file = new File(outputPath +"_" + ++fileCounter + this.fileExtention);
-                        fileCheck(file);
-                        //Creating a file writer
-                        fileWriter = new FileWriter(file);
-                    }
+
                     if(reducerOutput instanceof Map){
                         Map ouputEntry = (Map) reducerOutput;
                         Set set = ouputEntry.entrySet();
@@ -101,14 +91,10 @@ class WriteToFile {
                                 + kVObject.getValue()
                                 + '\n');
                     }
-                    if (!multiOutputFiles)
-                        fileWriter.write("----------------------------------------------------------\n");
-                    else
-                        fileWriter.close();
                 }
             }
-            if(!multiOutputFiles)
-                fileWriter.close();
+
+            fileWriter.close();
         }catch(Exception e){
             Helper.errorMsg("Writing to file: " + e.getMessage());
             throw new ErrorHandler("Writing to file failed.");

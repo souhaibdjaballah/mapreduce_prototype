@@ -50,7 +50,7 @@ public class ReduceObjective3 extends Reducer {
                 if (!passengerFlightCountByFlightID.containsKey(passenger.getFlightID())) {
                     passengerFlightCountByFlightID.put(passenger.getFlightID(), 1);
                 } else {
-                    passengerFlightCountByFlightID.put(passenger.getFlightID(), passengerFlightCountByFlightID.get(passenger.getFlightID()).intValue() + 1);
+                    passengerFlightCountByFlightID.put(passenger.getFlightID(), passengerFlightCountByFlightID.get(passenger.getFlightID()) + 1);
                 }
             }
         }

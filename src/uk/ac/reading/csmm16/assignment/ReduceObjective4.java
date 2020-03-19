@@ -36,9 +36,12 @@ public class ReduceObjective4 extends Reducer {
     void reduce(){
         Airport airport;
         Passenger passenger;
+
+        String passengerID = "";
         double distance = 0;
-//        KeyValueObject<String, Double> passengerHighestAirMilesObject = null;
-        KeyValueObject<String, Double> passengerHighestAirMilesObject = new KeyValueObject<>();
+
+        // This is to store the value by the writeToFile Class which requires a Map<K,V> list
+        Map<String, Double> passengerEarnedHighestAirMiles = new HashMap<>();
 
         // Map list for storing objectives key value pairs
         // List of airports with a key of AirportCode
@@ -90,15 +93,17 @@ public class ReduceObjective4 extends Reducer {
             Map.Entry entry = (Map.Entry) keyValue.next();
             double temp = (Double) entry.getValue();
             if(temp > distance){
-                passengerHighestAirMilesObject.setKeyValue((String) entry.getKey(), temp);
+                passengerID = (String) entry.getKey();
+                distance = temp;
             }
         }
+        passengerEarnedHighestAirMiles.put(passengerID, distance);
 
         // adding the final output to write in a file
-        this.addToReducerOutputList(airportList);
+//        this.addToReducerOutputList(airportList);
 
         // Writing the passenger with the highest air miles - key value objects
-        this.addToReducerOutputList(passengerHighestAirMilesObject);
+        this.addToReducerOutputList(passengerEarnedHighestAirMiles);
     }
 }
 
