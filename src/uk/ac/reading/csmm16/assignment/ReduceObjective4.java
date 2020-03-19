@@ -1,6 +1,5 @@
 package uk.ac.reading.csmm16.assignment;
 
-import uk.ac.reading.csmm16.assignment.core.KeyValueObject;
 import uk.ac.reading.csmm16.assignment.core.Reducer;
 
 import java.util.HashMap;
@@ -12,9 +11,6 @@ import java.util.Set;
 
 /**
  * Objectives:
- *  1 --> Get flights number by airport Code
- *  2 --> Get a list of flights based on the Flight id
- *  3 --> Get the number of passengers on each flight
  *  4 --> the line-of-sight (nautical) miles for each flight, the total travelled by each passenger
  *        and the passenger having earned the highest air miles.
  * */
@@ -22,18 +18,31 @@ import java.util.Set;
 public class ReduceObjective4 extends Reducer {
 
     /**
+     * The constructor receives an input list of type Map from the shuffle and sort phase.
+     *
      * @param list
      */
     public ReduceObjective4(Map list) {
         this.inputList = list;
     }
 
+
+    /**
+     * This is where the a thread look for code to run for each reducer instance.
+     * @return void
+     */
     @Override
     public void run() {
         reduce();
     }
 
-    void reduce(){
+
+    /**
+     * This is the custom code for handling data from the MapPassengersAndAirports class and
+     * output the objective number 4.
+     * @return void
+     */
+    private void reduce(){
         Airport airport;
         Passenger passenger;
 

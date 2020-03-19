@@ -4,11 +4,15 @@ package uk.ac.reading.csmm16.assignment.core;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
+
+/**
+ * The Job class is the brain of the non-MapReduce prototype.
+ *
+ */
 public class Job {
 
     // List of all the all the stored blocks simulating the distributed node storage
     private LinkedList mapperInputBlocksList = new LinkedList();
-//    private LinkedList reducerInputBlocksList = new LinkedList();
     // List of All Mappers objects; each Mapper has a list of keys Values
     private List<Mapper> mappersList = new LinkedList<>();
     // List of All Cominers
@@ -17,6 +21,7 @@ public class Job {
     private List<Reducer> reducersList = new LinkedList<>();
     private Configuration configuration;
 
+    // These are the custom class set for each task (objective).
     private Class mapperClass;
     private Class reducerClass;
     private Class combinerClass;
@@ -28,6 +33,10 @@ public class Job {
     private String outputDirPath;
 
 
+    /**
+     * Constructor receives Configuration instance to set in the App class (main program)
+     * @param configuration
+     */
     public Job(Configuration configuration){
         this.configuration = configuration;
     }
@@ -65,7 +74,10 @@ public class Job {
     }
 
 
-
+    /**
+     * This runs the job to manage all the phases of the MapReduce workflow
+     * @throws ErrorHandler
+     */
     public void submit() throws ErrorHandler {
         try {
             Helper.promptMsg("Job: " + jobName + " started.");
@@ -83,6 +95,10 @@ public class Job {
         Helper.promptMsg("Job: " + jobName + " finished. \n-----------------------------------------------------");
     }
 
+    /**
+     * This handles reading multiple inputs and store them in the form of blocks (chunks)
+     * @throws ErrorHandler
+     */
     private void dataStorage() throws ErrorHandler {
 
         Helper.promptMsg("Read and Store files Started.");
@@ -104,6 +120,10 @@ public class Job {
         writeToFile.write();
     }
 
+    /**
+     * This handles the map phase by passing a block of lines to each mapper dynamically during the run-time.
+     * @throws ErrorHandler
+     */
     private void map() throws ErrorHandler {
         if(!mapperInputBlocksList.isEmpty()) {
             new ThreadHandler("Map", mapperInputBlocksList.size()){
@@ -131,6 +151,10 @@ public class Job {
         }
     }
 
+    /**
+     * This handles the combine phase by passing the list of mappers output dynamically during the run-time.
+     * @throws ErrorHandler
+     */
     private void combine() throws ErrorHandler {
         new ThreadHandler("Combine", mapperInputBlocksList.size()){
             @Override
@@ -152,6 +176,10 @@ public class Job {
         };
     }
 
+    /**
+     * This handles the shuffle and sort phase.
+     * @throws ErrorHandler
+     */
     private void shuffleAndSort() throws ErrorHandler {
         new ThreadHandler("Shuffle", mapperInputBlocksList.size()) {
             @Override
@@ -161,6 +189,10 @@ public class Job {
         };
     }
 
+    /**
+     * This handles the partitioning  phase.
+     * @throws ErrorHandler
+     */
     private void partition() throws ErrorHandler {
         new ThreadHandler("Partition", mapperInputBlocksList.size()) {
             @Override
@@ -170,6 +202,11 @@ public class Job {
         };
     }
 
+    /**
+     * This handles the reduce phase by single partition is the partitioner is set,
+     * else it will receive a list directly from the shuffle and sort phase dynamically during the run-time.
+     * @throws ErrorHandler
+     */
     private void reduce() throws ErrorHandler {
         new ThreadHandler("Reduce", 1) { //testing
             @Override

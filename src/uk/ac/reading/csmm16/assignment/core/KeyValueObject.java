@@ -1,13 +1,17 @@
 package uk.ac.reading.csmm16.assignment.core;
 
-import java.security.Key;
+
+/**
+ * This is a class of pair values of key-values made for this prototype to
+ * help passing data between the the Map phase and the Reducer phase.
+ * @param <K>
+ * @param <V>
+ */
 
 public class KeyValueObject<K, V>{
 
     K key;
     V value;
-
-    public KeyValueObject() {}
 
     public KeyValueObject(K key, V  value) {
         this.key = key;
