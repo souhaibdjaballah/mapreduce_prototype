@@ -1,5 +1,6 @@
 package uk.ac.reading.csmm16.assignment;
 
+import uk.ac.reading.csmm16.assignment.core.KeyValueObject;
 import uk.ac.reading.csmm16.assignment.core.Reducer;
 
 import java.util.*;
@@ -12,31 +13,26 @@ import java.util.*;
 
 public class ReduceObjective1 extends Reducer {
 
-    /**
-     * The constructor receives an input list of type Map from the shuffle and sort phase.
-     * @param list
-     */
-    public ReduceObjective1(Map list) {
-        this.inputList = list;
-    }
 
     /**
-     * This is where the a thread look for code to run for each reducer instance.
-     * @return void
+     * The constructor receives an input list of type Map from the shuffle phase.
+     *
+     * @param inputList
      */
-    @Override
-    public void run() {
-        reduce();
+    public ReduceObjective1(Iterator inputList) {
+        super(inputList);
     }
+
 
     /**
      * This is the custom code for handling data from the MapPassengersAndAirports class and
      * output the objective number 1.
      * @return void
      */
-    private void reduce(){
+    public void reduce(){
         Airport airport;
         Passenger passenger;
+        Set<KeyValueObject> partitionSet;
 
 
         // a list of passengers with flight id as its key
@@ -46,27 +42,27 @@ public class ReduceObjective1 extends Reducer {
         // Map lists for storing objectives key value pairs
         Map<String, Integer> flightsNumByAirportCode = new HashMap();
 
-        //Converting the Map object to a Set object so that we can traverse it
-        Set set = inputList.entrySet();
-        Iterator keyValue = set.iterator();
 
-        while(keyValue.hasNext()) {
+
+        while(inputList.hasNext()) {
             //Converting to Map.Entry so that we can get key and value separately
-            Map.Entry entry = (Map.Entry) keyValue.next();
-            if(entry.getValue() instanceof Airport) {
-                airport = (Airport) entry.getValue();
-                airportCodeList.add(airport.getCode());
-            }
-            if(entry.getValue() instanceof Passenger){
-                passenger = (Passenger) entry.getValue();
-                flightsList.put(passenger.getFlightID(),passenger);
+            Map.Entry entry = (Map.Entry) inputList.next();
+            partitionSet = (Set<KeyValueObject>) entry.getValue();
+            for(KeyValueObject obj : partitionSet) {
+                if (obj.getValue() instanceof Airport) {
+                    airport = (Airport) obj.getValue();
+                    airportCodeList.add(airport.getCode());
+                }
+                if (obj.getValue() instanceof Passenger) {
+                    passenger = (Passenger) obj.getValue();
+                    flightsList.put(passenger.getFlightID(), passenger);
+                }
             }
         }
 
         for(String airportCode : airportCodeList){
-            int flightsCounter = 0;
-            set = flightsList.entrySet();
-            keyValue = set.iterator();
+            Set set = flightsList.entrySet();
+            Iterator keyValue = set.iterator();
 
             while(keyValue.hasNext()) {
                 //Converting to Map.Entry so that we can get key and value separately

@@ -10,7 +10,7 @@ import java.util.LinkedList;
  * This class extends the parent Mapper base class which has all the functionality
  * for the mapping phase.
  */
-public class MapPassengersAndAirports extends Mapper<String, Airport> {
+public class MapPassengersAndAirports extends Mapper<String, Object> {
 
     /**
      * Constructor receives a block of data for each created mapper and
@@ -19,16 +19,6 @@ public class MapPassengersAndAirports extends Mapper<String, Airport> {
      */
     public MapPassengersAndAirports(LinkedList input){
         this.block = input;
-        this.mapperOutputList = new LinkedList<>();
-    }
-
-    /**
-     * This is where the a thread look for code to run for each mapper instance.
-     * @return void
-     */
-    @Override
-    public void run() {
-        map();
     }
 
     /**
@@ -38,7 +28,7 @@ public class MapPassengersAndAirports extends Mapper<String, Airport> {
      * String and a value of type Object in the second param. This object is then added to the mapperOutputList list attribute.
      * @return void
      */
-    private void map(){
+    public void map(){
         // a list of String to store the splitted values per line.
         String [] splitedLine;
         if (!block.isEmpty()) {
@@ -49,21 +39,22 @@ public class MapPassengersAndAirports extends Mapper<String, Airport> {
                 // Split the retrieved line by comma
                 splitedLine = block.get(i).split(",");
 
+                // Check if the line belongs to the airports data set
                 if (splitedLine[0].matches("[A-Z\\/ ]{3,20}")  // find any word of length 3 t0 20 containing all letters or "/" or " " characters
                         && splitedLine[1].matches("[A-Z]{3}")
                         && splitedLine[2].matches("[\\-]?[\\d]{1,3}\\.[\\d]{3,13}")
                         && splitedLine[3].matches("[\\-]?[\\d]{1,3}\\.[\\d]{0,13}")) { // Check if the line belongs to the airport data
 
                     airport = new Airport(splitedLine[0], splitedLine[1], Double.parseDouble(splitedLine[2]), Double.parseDouble(splitedLine[3]));
-                    mapperOutputList.add(new KeyValueObject(airport.getCode(), airport)); // adding each airport object by airportCode value as Key
+                    addMapperOutput(new KeyValueObject(airport.getCode(), airport)); // adding each airport object by airportCode value as Key
 
-                    // Check if the line belongs to the airport data
+                    // Check if the line belongs to the passengers data set
                 }else if (splitedLine[0].matches("[A-Z]{3}[\\d]{4}[A-Z]{2}[\\d]") && splitedLine[1].matches("[A-Z]{3}[\\d]{4}[A-Z]")
                         && splitedLine[2].matches("[A-Z]{3}") && splitedLine[3].matches("[A-Z]{3}")
                         && splitedLine[4].matches("[\\d]{10}") && splitedLine[5].matches("[\\d]{1,4}")) { // Check if the line belongs to the Passenger data
 
                     passenger = new Passenger(splitedLine[0], splitedLine[1], splitedLine[2], splitedLine[3], splitedLine[4], splitedLine[5]);
-                    mapperOutputList.add(
+                    addMapperOutput(
                             // adding each passenger object by concatenating the pair of {passengerID-flightID} value as a unique String key
                             new KeyValueObject(passenger.getPassengerID()+ "-" + passenger.getFlightID(),
                                     passenger));

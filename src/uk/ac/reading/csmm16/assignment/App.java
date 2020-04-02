@@ -16,19 +16,25 @@ public class App {
 
         job1.setMapperClass(MapPassengersAndAirports.class);
         job1.setReducerClass(ReduceObjective1.class);
+        // Using the combiner class
         job1.setCombinerClass(CombineObjective1.class);
-        job1.addInputPath(args[1]);
-        job1.addInputPath(args[0]);
+        job1.addInputPath("Top30_airports_LatLong.csv");
+        job1.addInputPath("AComp_Passenger_data.csv");
         job1.setOutputDirPath("job1");
         job1.submit();
 
         // Job 2 for Objective2 ----------------------------------------
+        /**
+         * We need use one Reducer for the next Jobs to insure ordered outputs for Objective 2 & 3.
+         * Also the last objective (4th) we need one Reducer to be able to calculate the distance for each passenger.
+         */
+        conf.setSingleReducer(true);
         Job job2 = new Job(conf, "Job-2 for Objective2");
 
         job2.setMapperClass(MapPassengersAndAirports.class);
         job2.setReducerClass(ReduceObjective2.class);
-        job2.addInputPath(args[1]);
-        job2.addInputPath(args[0]);
+        job2.addInputPath("Top30_airports_LatLong.csv");
+        job2.addInputPath("AComp_Passenger_data.csv");
         job2.setOutputDirPath("job2");
         job2.submit();
 
@@ -37,8 +43,8 @@ public class App {
         Job job3 = new Job(conf, "Job-3 for Objective3");
         job3.setMapperClass(MapPassengersAndAirports.class);
         job3.setReducerClass(ReduceObjective3.class);
-        job3.addInputPath(args[1]);
-        job3.addInputPath(args[0]);
+        job3.addInputPath("Top30_airports_LatLong.csv");
+        job3.addInputPath("AComp_Passenger_data.csv");
         job3.setOutputDirPath("job3");
         job3.submit();
 
@@ -46,8 +52,8 @@ public class App {
         Job job4 = new Job(conf, "Job-4 for Objective4");
         job4.setMapperClass(MapPassengersAndAirports.class);
         job4.setReducerClass(ReduceObjective4.class);
-        job4.addInputPath(args[1]);
-        job4.addInputPath(args[0]);
+        job4.addInputPath("Top30_airports_LatLong.csv");
+        job4.addInputPath("AComp_Passenger_data.csv");
         job4.setOutputDirPath("job4");
         job4.submit();
 

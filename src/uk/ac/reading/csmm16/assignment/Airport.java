@@ -5,7 +5,7 @@ package uk.ac.reading.csmm16.assignment;
  * in a structured object to facilitate the calculation of the Objectives.
  * This is done in the Map phase and implemented in the MapPassengersAndAirport class.
  */
-public class Airport {
+public class Airport extends Object {
 
     private String name;
     private String code;
@@ -53,6 +53,6 @@ public class Airport {
      */
     @Override
     public String toString() {
-        return getName() + ", " + getCode() + ", " + getLatitude() + ", " + getLongitude();
+        return getName() + "," + getCode() + "," + getLatitude() + "," + getLongitude();
     }
 }

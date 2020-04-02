@@ -14,7 +14,7 @@ import java.util.Date;
  * the arrival time (times to be converted to HH:MM:SS format), and
  * the flight times.
  * */
-public class Passenger {
+public class Passenger{
 
     // Using date formater to convert unix epoch time to HH:MM:SS format
     private SimpleDateFormat dateFormater = new SimpleDateFormat("HH:MM:SS");
@@ -119,8 +119,34 @@ public class Passenger {
      */
     @Override
     public String toString() {
-        return  getPassengerID() + ", " + getFlightID() + ", " + getFromAirportCode()
-                + ", " + getDestinationAirportCode() + ", " + getDepartureTime()
-                + ", " + arrivalTime() + ", " + getTotalFlightTime();
+        return  getPassengerID() + "," + getFlightID() + "," + getFromAirportCode()
+                + "," + getDestinationAirportCode() + "," + getDepartureTime()
+                + "," + arrivalTime() + "," + getTotalFlightTime();
+    }
+
+
+    /**
+     * Overriding both the equals and hashcode methods to compare this class instances;
+     * This is important to remove duplicate values.
+     * @param obj
+     * @return
+     */
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj instanceof Passenger) {
+            Passenger psg = (Passenger) obj;
+            if (passengerID != null && !passengerID.equals(psg.getPassengerID()) && flightID != null && !flightID.equals(psg.getFlightID()))
+                return false;
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return getPassengerID().hashCode() + getFlightID().hashCode();
     }
 }

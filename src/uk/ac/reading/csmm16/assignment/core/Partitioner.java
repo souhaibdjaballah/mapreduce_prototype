@@ -1,50 +1,47 @@
 package uk.ac.reading.csmm16.assignment.core;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+/**
+ * This class partition a Mapper output and group it by key.
+ */
 public class Partitioner implements Runnable {
-    private Map<Object, Object> sortedList;
-    private static List<Map> partitionedBlocksList = new LinkedList<>();
-    private Map<Object, Object> blockList = new HashMap<>();
-    private Map<Object, Object> blockListAirports = new HashMap<>();
+    private Mapper mapper;
+    private List<KeyValueObject> inputList;
+    // Group the list of Key-Value pairs by key
+    protected Map<String, Set<KeyValueObject>> partitionList = new HashMap<>();
 
-    public Partitioner(Map<Object, Object> sortedList) {
-        this.sortedList = sortedList;
+
+    public Partitioner(Mapper mapper) {
+        this.mapper = mapper;
     }
 
-    public static List<Map> getPartitionedBlocksList() {
-        return partitionedBlocksList;
+    public Map<String, Set<KeyValueObject>> getPartitionList() {
+        return partitionList;
     }
 
-    void partition(){
-        Set set = sortedList.entrySet();
-        Iterator keyValueLoop = set.iterator();
+    /**
+     * This method takes a Mapper output and creates a partition for each key.
+     * Each key has one or more of value stored in a Set.
+     */
+    void partition() {
 
-        while(keyValueLoop.hasNext()) {
-            Iterator keyValue = keyValueLoop;
-            Map.Entry entry1 = (Map.Entry) keyValueLoop.next();
-            String composedKey = (String) entry1.getKey();
-            while (keyValue.hasNext()) {
-                Map.Entry entry = (Map.Entry) keyValue.next();
-                String entryKey = (String) entry.getKey();
-                if (entryKey.matches("[A-Z]{3}"))
-                    blockListAirports.put(entryKey, entry.getValue());
-                else if (entryKey.contains("-")) {
-                    String[] s = entryKey.split("-");
-                    if (entryKey.contains(s[0])) {
-                        this.blockList.put(entry.getKey(), entry.getValue());
-                    } else {
-                        partitionedBlocksList.add(blockList);
-                        blockList = new HashMap<>();
-                    }
-                }
-
-
+        inputList = mapper.getMapperOutputList();
+        Set set;
+        for(KeyValueObject<String, Object> kVobj : inputList){
+            if(!partitionList.containsKey(kVobj.key)){
+                set = new HashSet();
+                set.add(kVobj);
+                partitionList.put(kVobj.key, set);
+            }else{
+                partitionList.get(kVobj.key).add(kVobj);
             }
         }
-        if (!blockList.isEmpty())
-            partitionedBlocksList.add(blockList);
-        partitionedBlocksList.add(blockListAirports);
+
     }
 
 

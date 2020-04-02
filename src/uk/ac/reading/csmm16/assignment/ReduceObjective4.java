@@ -1,5 +1,6 @@
 package uk.ac.reading.csmm16.assignment;
 
+import uk.ac.reading.csmm16.assignment.core.KeyValueObject;
 import uk.ac.reading.csmm16.assignment.core.Reducer;
 
 import java.util.HashMap;
@@ -18,22 +19,12 @@ import java.util.Set;
 public class ReduceObjective4 extends Reducer {
 
     /**
-     * The constructor receives an input list of type Map from the shuffle and sort phase.
+     * The constructor receives an input list of type Map from the shuffle phase.
      *
-     * @param list
+     * @param inputList
      */
-    public ReduceObjective4(Map list) {
-        this.inputList = list;
-    }
-
-
-    /**
-     * This is where the a thread look for code to run for each reducer instance.
-     * @return void
-     */
-    @Override
-    public void run() {
-        reduce();
+    public ReduceObjective4(Iterator inputList) {
+        super(inputList);
     }
 
 
@@ -42,9 +33,11 @@ public class ReduceObjective4 extends Reducer {
      * output the objective number 4.
      * @return void
      */
-    private void reduce(){
+    public void reduce(){
         Airport airport;
         Passenger passenger;
+
+        Set<KeyValueObject> partitionSet;
 
         String passengerID = "";
         double distance = 0;
@@ -60,19 +53,19 @@ public class ReduceObjective4 extends Reducer {
         // Key-value list of each passenger and his/her total traveled air miles
         Map<String, Double> passengerTotalTraveled = new HashMap<>();
 
-        //Converting the Map object to a Set object so that we can traverse it
-        Set set = inputList.entrySet();
-        Iterator keyValue = set.iterator();
 
-        while(keyValue.hasNext()) {
+        while(inputList.hasNext()) {
             //Converting to Map.Entry so that we can get key and value separately
-            Map.Entry entry = (Map.Entry) keyValue.next();
-            if(entry.getValue() instanceof Airport) {
-                airport = (Airport) entry.getValue();
-                airportList.put(airport.getCode(), airport);
-            }else if(entry.getValue() instanceof Passenger){
-                passenger = (Passenger) entry.getValue();
-                passengerList.add(passenger);
+            Map.Entry entry = (Map.Entry) inputList.next();
+            partitionSet = (Set<KeyValueObject>) entry.getValue();
+            for (KeyValueObject obj : partitionSet) {
+                if (obj.getValue() instanceof Airport) {
+                    airport = (Airport) obj.getValue();
+                    airportList.put(airport.getCode(), airport);
+                } else if (obj.getValue() instanceof Passenger) {
+                    passenger = (Passenger) obj.getValue();
+                    passengerList.add(passenger);
+                }
             }
         }
 
@@ -93,8 +86,8 @@ public class ReduceObjective4 extends Reducer {
             }
         }
 
-        set = passengerTotalTraveled.entrySet();
-        keyValue = set.iterator();
+        Set set = passengerTotalTraveled.entrySet();
+        Iterator keyValue = set.iterator();
         distance = 0;
 
         while(keyValue.hasNext()) {

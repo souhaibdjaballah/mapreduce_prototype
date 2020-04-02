@@ -13,11 +13,13 @@ public class Job {
 
     // List of all the all the stored blocks simulating the distributed node storage
     private LinkedList mapperInputBlocksList = new LinkedList();
-    // List of All Mappers objects; each Mapper has a list of keys Values
+    // List of all Mappers objects; each Mapper has a list of keys Values
     private List<Mapper> mappersList = new LinkedList<>();
-    // List of All Cominers
+    // List of all Cominers
     private List<Combiner> combinersList = new LinkedList<>();
-    // List of All Reducers
+    // List of all Partitioners
+    private List<Partitioner> partitionersList = new LinkedList<>();
+    // List of all Reducers
     private List<Reducer> reducersList = new LinkedList<>();
     private Configuration configuration;
 
@@ -25,7 +27,6 @@ public class Job {
     private Class mapperClass;
     private Class reducerClass;
     private Class combinerClass;
-    private Class partitionerClass;
 
     private String jobName;
 
@@ -83,9 +84,9 @@ public class Job {
             Helper.promptMsg("Job: " + jobName + " started.");
             dataStorage();
             map();
-            shuffleAndSort();
-            if(partitionerClass != null)
-                partition();
+            combine(); // Optional phase. This executes only when cominerClass is set.
+            partition();
+            shuffle();
             reduce();
             writeToFile();
         } catch (Exception e) {
@@ -152,19 +153,18 @@ public class Job {
     }
 
     /**
+     * Optional phase.
      * This handles the combine phase by passing the list of mappers output dynamically during the run-time.
      * @throws ErrorHandler
      */
     private void combine() throws ErrorHandler {
-        new ThreadHandler("Combine", mapperInputBlocksList.size()){
-            @Override
-            public void run() throws ErrorHandler {
-                for (Object singleFileBlocksList : mapperInputBlocksList) {
-                    List blockslist = (List) singleFileBlocksList;
-                    for (Object obj : blockslist) {
-                        LinkedList<String> block = (LinkedList<String>) obj;
+        if(combinerClass != null) {
+            new ThreadHandler("Combine", mappersList.size()){
+                @Override
+                public void run() throws ErrorHandler {
+                    for (Mapper mapper : mappersList) {
                         try {
-                            Combiner combiner = (Combiner) combinerClass.getDeclaredConstructor(LinkedList.class).newInstance(block);
+                            Combiner combiner = (Combiner) combinerClass.getDeclaredConstructor(List.class).newInstance(mapper.mapperOutputList);
                             combinersList.add(combiner);
                             this.getPool().execute(combiner);
                         } catch (InstantiationException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
@@ -172,21 +172,8 @@ public class Job {
                         }
                     }
                 }
-            }
-        };
-    }
-
-    /**
-     * This handles the shuffle and sort phase.
-     * @throws ErrorHandler
-     */
-    private void shuffleAndSort() throws ErrorHandler {
-        new ThreadHandler("Shuffle", mapperInputBlocksList.size()) {
-            @Override
-            public void run() {
-                this.getPool().execute(new ShuffleAndSort(mappersList));
-            }
-        };
+            };
+        }
     }
 
     /**
@@ -194,13 +181,41 @@ public class Job {
      * @throws ErrorHandler
      */
     private void partition() throws ErrorHandler {
-        new ThreadHandler("Partition", mapperInputBlocksList.size()) {
+        new ThreadHandler("Partition", 1) {
             @Override
             public void run() {
-                this.getPool().execute(new Partitioner(ShuffleAndSort.getSortedList()));
+                if (combinerClass != null) {
+                    for(Combiner m : combinersList) {
+                        Partitioner partitioner = new Partitioner(m);
+                        partitionersList.add(partitioner);
+                        this.getPool().execute(partitioner);
+                    }
+                }else{
+                    for(Mapper m : mappersList) {
+                        Partitioner partitioner = new Partitioner(m);
+                        partitionersList.add(partitioner);
+                        this.getPool().execute(partitioner);
+                    }
+                }
             }
         };
+
     }
+
+    /**
+     * This handles the shuffle phase.
+     * @throws ErrorHandler
+     */
+    private void shuffle() throws ErrorHandler {
+        new ThreadHandler("Shuffle", partitionersList.size()) {
+            @Override
+            public void run() {
+                this.getPool().execute(new Shuffle(partitionersList, configuration));
+            }
+        };
+
+    }
+
 
     /**
      * This handles the reduce phase by single partition is the partitioner is set,
@@ -208,15 +223,16 @@ public class Job {
      * @throws ErrorHandler
      */
     private void reduce() throws ErrorHandler {
-        new ThreadHandler("Reduce", 1) { //testing
+        new ThreadHandler("Reduce", partitionersList.size()) {
             @Override
             public void run() throws ErrorHandler {
 
-                if(partitionerClass != null) {
-                    List<Map> list = Partitioner.getPartitionedBlocksList();
-                    for (Map singlePartitionedBlockList : list) {
+                if(!configuration.isSingleReducer() && configuration.getNumberOfReducers() <= partitionersList.size()) {
+                    for (Map mergedList : Shuffle.getMergedList()) {
+                        Set set = mergedList.entrySet();
+                        Iterator partitionBlock = set.iterator();
                         try {
-                            Reducer reducer = (Reducer) reducerClass.getDeclaredConstructor(Map.class).newInstance(singlePartitionedBlockList);
+                            Reducer reducer = (Reducer) reducerClass.getDeclaredConstructor(Iterator.class).newInstance(partitionBlock);
                             reducersList.add(reducer);
                             this.getPool().execute(reducer);
                         } catch (InstantiationException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
@@ -224,9 +240,13 @@ public class Job {
                         }
 
                     }
+
                 }else {
+                    //Converting the Map object to a Set object so that we can traverse it
+                    Set set = Shuffle.getSingleList().entrySet();
+                    Iterator iterator = set.iterator();
                     try {
-                        Reducer reducer = (Reducer) reducerClass.getDeclaredConstructor(Map.class).newInstance(ShuffleAndSort.getSortedList());
+                        Reducer reducer = (Reducer) reducerClass.getDeclaredConstructor(Iterator.class).newInstance(iterator);
                         reducersList.add(reducer);
                         this.getPool().execute(reducer);
                     } catch (InstantiationException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {

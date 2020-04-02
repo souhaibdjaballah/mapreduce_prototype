@@ -67,7 +67,7 @@ public abstract class ThreadHandler implements Callable {
      */
     private void setupThreadPool(){
         if( pool == null || pool.isShutdown()){
-            if(Configuration.NUMBER_OF_THREADS <= Runtime.getRuntime().availableProcessors())
+            if(threadsNum <= Runtime.getRuntime().availableProcessors())
                 pool = Executors.newFixedThreadPool(threadsNum);
             else
                 pool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());

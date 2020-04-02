@@ -2,8 +2,5 @@
 out/
 outputFiles/
 testing/
-other_testing/
+META-INF/
 mapreduce_prototype.iml
-*.zip
-*.7z
-*.rar
